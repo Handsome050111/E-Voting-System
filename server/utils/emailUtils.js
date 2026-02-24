@@ -4,14 +4,32 @@ const sendEmail = async (options) => {
     // For development, we can use ethereal or a simple log if credentials aren't provided
     // But since nodemailer is in dependencies, let's set up a basic transport
 
+    const dns = require('dns');
+    const { promisify } = require('util');
+    const resolve4 = promisify(dns.resolve4);
+
+    let hostIp = 'smtp.gmail.com';
+    try {
+        const ips = await resolve4('smtp.gmail.com');
+        if (ips && ips.length > 0) {
+            hostIp = ips[0];
+            console.log(`Resolved smtp.gmail.com to IPv4: ${hostIp}`);
+        }
+    } catch (err) {
+        console.warn('DNS IPv4 resolution failed, falling back to hostname:', err.message);
+    }
+
     const transporterOptions = {
-        host: 'smtp.gmail.com',
+        host: hostIp,
         port: 465,
         secure: true, // true for 465, false for other ports
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
+        tls: {
+            servername: 'smtp.gmail.com', // Required for SSL verification when connecting to an IP
+        }
     };
 
     const transporter = nodemailer.createTransport(transporterOptions);
