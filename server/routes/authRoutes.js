@@ -22,7 +22,7 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:resettoken', resetPassword);
 
 // Admin only routes
-router.get('/', protect, admin, getUsers);
+router.get('/users', protect, admin, getUsers);
 router.delete('/:id', protect, admin, deleteUser);
 
 module.exports = router;
