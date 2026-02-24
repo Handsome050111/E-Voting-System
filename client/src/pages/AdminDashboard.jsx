@@ -140,7 +140,7 @@ const AdminDashboard = () => {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             };
-            await axios.put(`http://localhost:5000/api/elections/${id}`, { status: newStatus }, config);
+            await api.put(`/elections/${id}`, { status: newStatus }, config);
             fetchElections();
         } catch (error) {
             alert('Error updating status');
