@@ -4,61 +4,54 @@ const sendEmail = async (options) => {
     // For development, we can use ethereal or a simple log if credentials aren't provided
     // But since nodemailer is in dependencies, let's set up a basic transport
 
-    const dns = require('dns');
-    const { promisify } = require('util');
-    const resolve4 = promisify(dns.resolve4);
+    // Due to Render.com blocking all outbound SMTP ports (25, 465, 587) on their free tier,
+    // we must use an HTTP API to send emails instead of Nodemailer/SMTP.
+    // We are using Brevo (formerly Sendinblue) because it has a generous free tier and a simple HTTP API.
 
-    let hostIp = 'smtp.gmail.com';
-    try {
-        const ips = await resolve4('smtp.gmail.com');
-        if (ips && ips.length > 0) {
-            hostIp = ips[0];
-            console.log(`Resolved smtp.gmail.com to IPv4: ${hostIp}`);
-        }
-    } catch (err) {
-        console.warn('DNS IPv4 resolution failed, falling back to hostname:', err.message);
+    const apiKey = process.env.BREVO_API_KEY;
+
+    if (!apiKey) {
+        throw new Error('Missing BREVO_API_KEY environment variable. Render blocks standard SMTP, so you must use Brevo. Please add BREVO_API_KEY to your Render environment variables.');
     }
 
-    const transporterOptions = {
-        host: hostIp,
-        port: 465,
-        secure: true, // true for 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+    const payload = {
+        sender: {
+            name: process.env.FROM_NAME || 'VoteSecure Admin',
+            email: process.env.FROM_EMAIL || 'no-reply@votesecure.com'
         },
-        tls: {
-            servername: 'smtp.gmail.com', // Required for SSL verification when connecting to an IP
-        }
-    };
-
-    const transporter = nodemailer.createTransport(transporterOptions);
-
-    const message = {
-        from: `${process.env.FROM_NAME || 'VoteSecure'} <${process.env.FROM_EMAIL || 'no-reply@votesecure.com'}>`,
-        to: options.email,
+        to: [
+            {
+                email: options.email
+            }
+        ],
         subject: options.subject,
-        text: options.message,
+        textContent: options.message
     };
 
-    console.log(`Attempting to send email to: ${options.email} via Gmail...`);
+    console.log(`Attempting to send HTTP email to: ${options.email} via Brevo API...`);
 
     try {
-        const info = await transporter.sendMail(message);
-        console.log('✅ Email sent successfully: %s', info.messageId);
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': apiKey,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-        // Preview URL if using ethereal
-        if (info.messageId && !process.env.EMAIL_USER) {
-            console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Brevo API Error: ${response.status} - ${JSON.stringify(errorData)}`);
         }
-        return info;
+
+        const data = await response.json();
+        console.log('✅ HTTP Email sent successfully via Brevo: %s', data.messageId);
+        return data;
+
     } catch (error) {
-        console.error('❌ Nodemailer Error:');
-        console.error('Code:', error.code);
-        console.error('Command:', error.command);
-        console.error('Response:', error.response);
-        console.error('ResponseCode:', error.responseCode);
-        console.error('Full Error:', error);
+        console.error('❌ HTTP Email Error:', error.message);
         throw error;
     }
 };
