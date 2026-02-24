@@ -48,6 +48,30 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+app.get('/api/test-email', async (req, res) => {
+    const sendEmail = require('./utils/emailUtils');
+    try {
+        const info = await sendEmail({
+            email: req.query.email || process.env.EMAIL_USER || 'test@example.com',
+            subject: 'Test Email - VoteSecure',
+            message: 'If you receive this, the SMTP configuration on Render is working perfectly!',
+        });
+        res.json({ success: true, message: 'Test email sent successfully', info });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Email failed to send',
+            error: {
+                message: error.message,
+                code: error.code,
+                command: error.command,
+                response: error.response,
+                responseCode: error.responseCode
+            }
+        });
+    }
+});
+
 // Make io available in routes
 app.use((req, res, next) => {
     req.io = io;
