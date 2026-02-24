@@ -21,6 +21,10 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Please add all fields' });
         }
 
+        if (!/^[a-zA-Z\s]+$/.test(name)) {
+            return res.status(400).json({ message: 'Name must contain only letters and spaces' });
+        }
+
         // Check if user exists
         const trimmedEmail = email.trim().toLowerCase();
         console.log(`Checking if user exists with email: ${trimmedEmail}`);

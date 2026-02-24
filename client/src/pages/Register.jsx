@@ -24,6 +24,12 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Frontend validation
+        if (!/^[a-zA-Z\s]+$/.test(name)) {
+            return setError('Name must contain only letters and spaces.');
+        }
+
         try {
             const res = await register(name, email, password, 'voter');
             navigate('/verify-otp', { state: { email: res.email, debugOtp: res.debugOtp } });
@@ -59,6 +65,9 @@ const Register = () => {
                                     placeholder="John Doe"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
+                                    pattern="^[a-zA-Z\s]+$"
+                                    title="Name must contain only letters and spaces."
+                                    maxLength="50"
                                 />
                             </div>
                             <div>
