@@ -102,12 +102,33 @@ app.use('/api/votes', require('./routes/voteRoutes'));
 const distPath = path.join(__dirname, '..', 'client', 'dist');
 console.log('Serving production assets from:', distPath);
 
-app.use(express.static(distPath));
+app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            // Never cache index.html so users always get the latest JS/CSS hashes
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+            // Cache static assets aggressively since their names contain hashes
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+        }
+    }
+}));
 
 // Wildcard route for React Router
 app.get('*', (req, res) => {
+    // If the browser requests a missing asset (like an old CSS file), return 404 instead of index.html
+    // This prevents the "MIME type ('text/html') is not a supported stylesheet" error
+    if (req.originalUrl.startsWith('/assets/') || req.originalUrl.match(/\.(js|css|json)$/)) {
+        return res.status(404).send('Asset not found');
+    }
+
     const indexPath = path.join(distPath, 'index.html');
     if (require('fs').existsSync(indexPath)) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.sendFile(indexPath);
     } else {
         res.status(404).send('Application build not found at: ' + indexPath);
