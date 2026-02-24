@@ -5,20 +5,14 @@ const sendEmail = async (options) => {
     // But since nodemailer is in dependencies, let's set up a basic transport
 
     const transporterOptions = {
-        host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
-        port: process.env.EMAIL_PORT || 587,
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
     };
-
-    // Use built-in service config if it's Gmail for better reliability
-    if (process.env.EMAIL_HOST === 'smtp.gmail.com') {
-        delete transporterOptions.host;
-        delete transporterOptions.port;
-        transporterOptions.service = 'gmail';
-    }
 
     const transporter = nodemailer.createTransport(transporterOptions);
 
