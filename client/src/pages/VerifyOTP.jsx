@@ -9,7 +9,7 @@ const VerifyOTP = () => {
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
     const [resendMessage, setResendMessage] = useState('');
-    const [countdown, setCountdown] = useState(60);
+    const [countdown, setCountdown] = useState(30);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -37,7 +37,7 @@ const VerifyOTP = () => {
         try {
             const res = await api.post('/auth/resend-otp', { email });
             setResendMessage(res.data.message);
-            setCountdown(60); // Reset timer on success
+            setCountdown(30); // Reset timer on success
         } catch (err) {
             setError(err.response?.data?.message || 'Resend failed');
         } finally {
