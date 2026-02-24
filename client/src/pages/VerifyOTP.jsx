@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import AuthContext from '../context/AuthContext';
@@ -9,6 +9,7 @@ const VerifyOTP = () => {
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
     const [resendMessage, setResendMessage] = useState('');
+    const [countdown, setCountdown] = useState(60);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -16,6 +17,16 @@ const VerifyOTP = () => {
 
     // Get email from location state (passed from Register page)
     const email = location.state?.email;
+
+    useEffect(() => {
+        let timer;
+        if (countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [countdown]);
 
     const handleResend = async () => {
         if (!email) return;
@@ -26,6 +37,7 @@ const VerifyOTP = () => {
         try {
             const res = await api.post('/auth/resend-otp', { email });
             setResendMessage(res.data.message);
+            setCountdown(60); // Reset timer on success
         } catch (err) {
             setError(err.response?.data?.message || 'Resend failed');
         } finally {
@@ -120,10 +132,10 @@ const VerifyOTP = () => {
                         <button
                             type="button"
                             onClick={handleResend}
-                            disabled={resendLoading}
-                            className="text-indigo-600 font-bold hover:underline disabled:opacity-50"
+                            disabled={resendLoading || countdown > 0}
+                            className={`font-bold transition-colors ${countdown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-indigo-600 hover:underline'}`}
                         >
-                            {resendLoading ? 'Sending...' : 'Resend OTP'}
+                            {resendLoading ? 'Sending...' : (countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP')}
                         </button>
                     </p>
                     <button
