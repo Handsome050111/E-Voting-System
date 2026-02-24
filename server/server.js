@@ -7,6 +7,10 @@ const path = require('path');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+if (!process.env.JWT_SECRET) {
+    console.warn('⚠️ WARNING: JWT_SECRET is not defined in environment variables! Logins will fail.');
+}
+
 const app = express();
 const server = http.createServer(app);
 
@@ -25,6 +29,20 @@ app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
 }));
+
+// Diagnostic Route (Moved to top)
+app.get('/api/health', (req, res) => {
+    const fs = require('fs');
+    const localDist = path.join(__dirname, 'dist');
+    res.json({
+        status: 'ok',
+        time: new Date(),
+        dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        dbState: mongoose.connection.readyState,
+        env: process.env.NODE_ENV,
+        localDistExists: fs.existsSync(localDist),
+    });
+});
 
 // Make io available in routes
 app.use((req, res, next) => {
@@ -46,21 +64,9 @@ app.use('/api/elections', require('./routes/electionRoutes'));
 app.use('/api/candidates', require('./routes/candidateRoutes'));
 app.use('/api/votes', require('./routes/voteRoutes'));
 
-// Health & Diagnostic Route
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        env: process.env.NODE_ENV,
-        dir: __dirname,
-        cwd: process.cwd(),
-        clientDistExists: require('fs').existsSync(path.join(__dirname, '../client/dist')),
-        clientBuildRootExists: require('fs').existsSync(path.join(process.cwd(), 'client/dist'))
-    });
-});
-
-// Serve Static Files in Production
+// Serve Static Files
 const distPath = path.resolve(__dirname, '..', 'client', 'dist');
-console.log('Static files being served from:', distPath);
+console.log('Serving production assets from:', distPath);
 
 app.use(express.static(distPath));
 
@@ -70,7 +76,7 @@ app.get('*', (req, res) => {
     if (require('fs').existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.status(404).send('Static files not found. Build may have failed or path is incorrect.');
+        res.status(404).send('Application build not found at: ' + indexPath);
     }
 });
 

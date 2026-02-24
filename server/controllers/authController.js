@@ -109,8 +109,8 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Registration Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -145,8 +145,8 @@ const loginUser = async (req, res) => {
             res.status(401).json({ message: 'Invalid credentials' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Login Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -158,8 +158,8 @@ const getMe = async (req, res) => {
         const user = await User.findById(req.user.id).select('-password');
         res.status(200).json(user);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('GetMe Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -216,8 +216,8 @@ const forgotPassword = async (req, res) => {
             return res.status(500).json({ message: 'Email could not be sent' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('ForgotPass Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -255,8 +255,8 @@ const resetPassword = async (req, res) => {
             token: generateToken(user._id),
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('ResetPass Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -294,8 +294,8 @@ const verifyOTP = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('VerifyOTP Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -320,8 +320,8 @@ const resendOTP = async (req, res) => {
             res.status(200).json({ success: true, message: 'OTP regenerated, but email failed. Check console.', debugOtp: otp });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('ResendOTP Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -330,8 +330,8 @@ const getUsers = async (req, res) => {
         const users = await User.find({}).select('-password');
         res.status(200).json(users);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('GetUsers Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
@@ -351,8 +351,8 @@ const deleteUser = async (req, res) => {
         await user.deleteOne();
         res.status(200).json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('DeleteUser Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 };
 
