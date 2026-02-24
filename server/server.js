@@ -35,7 +35,7 @@ app.use(helmet({
 // Diagnostic Route (Moved to top)
 app.get('/api/health', (req, res) => {
     const fs = require('fs');
-    const localDist = path.join(__dirname, 'dist');
+    const localDist = path.join(__dirname, '..', 'client', 'dist');
     res.json({
         status: 'ok',
         time: new Date(),
@@ -75,7 +75,7 @@ app.use('/api/candidates', require('./routes/candidateRoutes'));
 app.use('/api/votes', require('./routes/voteRoutes'));
 
 // Serve Static Files
-const distPath = path.resolve(__dirname, '..', 'client', 'dist');
+const distPath = path.join(__dirname, '..', 'client', 'dist');
 console.log('Serving production assets from:', distPath);
 
 app.use(express.static(distPath));
@@ -89,6 +89,7 @@ app.get('*', (req, res) => {
         res.status(404).send('Application build not found at: ' + indexPath);
     }
 });
+
 
 // Socket.io Connection
 io.on('connection', (socket) => {
