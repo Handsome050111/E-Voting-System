@@ -14,6 +14,8 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const server = http.createServer(app);
 
+let lastDbError = null;
+
 // Socket.io Setup
 const io = new Server(server, {
     cors: {
@@ -39,6 +41,8 @@ app.get('/api/health', (req, res) => {
         time: new Date(),
         dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         dbState: mongoose.connection.readyState,
+        dbError: lastDbError ? lastDbError.message : null,
+        uriExists: !!process.env.MONGODB_URI,
         env: process.env.NODE_ENV,
         localDistExists: fs.existsSync(localDist),
     });
@@ -55,8 +59,14 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/voting-sy
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+    .then(() => {
+        console.log('MongoDB Connected');
+        lastDbError = null;
+    })
+    .catch(err => {
+        console.error('MongoDB Connection Error:', err);
+        lastDbError = err;
+    });
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
