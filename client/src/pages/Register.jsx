@@ -26,7 +26,7 @@ const Register = () => {
         setError('');
         try {
             const res = await register(name, email, password, 'voter');
-            navigate('/verify-otp', { state: { email: res.email } });
+            navigate('/verify-otp', { state: { email: res.email, debugOtp: res.debugOtp } });
         } catch (error) {
             setError(error.response?.data?.message || 'Registration failed');
         }
