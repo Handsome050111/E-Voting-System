@@ -48,10 +48,12 @@ const sendEmail = async (options) => {
 
         const data = await response.json();
         console.log('✅ HTTP Email sent successfully via Brevo: %s', data.messageId);
+        global.lastEmailError = null; // Clear on success
         return data;
 
     } catch (error) {
         console.error('❌ HTTP Email Error:', error.message);
+        global.lastEmailError = error.message;
         throw error;
     }
 };

@@ -42,6 +42,7 @@ app.get('/api/health', (req, res) => {
         dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         dbState: mongoose.connection.readyState,
         dbError: lastDbError ? lastDbError.message : null,
+        emailError: global.lastEmailError || null,
         uriExists: !!process.env.MONGODB_URI,
         env: process.env.NODE_ENV,
         localDistExists: fs.existsSync(localDist),
