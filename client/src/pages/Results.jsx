@@ -2,7 +2,15 @@ import { useState, useEffect, useContext } from 'react';
 import api, { getBaseURL } from '../utils/api';
 import { Bar } from 'react-chartjs-2';
 import AuthContext from '../context/AuthContext';
-// ... rest of imports
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
 import Navbar from '../components/Navbar';
 import io from 'socket.io-client';
 
