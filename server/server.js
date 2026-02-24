@@ -22,7 +22,8 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors());
 app.use(helmet({
-    contentSecurityPolicy: false, // Disable CSP for simplicity in this demo, or configure it properly
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
 }));
 
 // Make io available in routes
@@ -45,18 +46,33 @@ app.use('/api/elections', require('./routes/electionRoutes'));
 app.use('/api/candidates', require('./routes/candidateRoutes'));
 app.use('/api/votes', require('./routes/voteRoutes'));
 
-// Serve Static Files in Production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
+// Health & Diagnostic Route
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        env: process.env.NODE_ENV,
+        dir: __dirname,
+        cwd: process.cwd(),
+        clientDistExists: require('fs').existsSync(path.join(__dirname, '../client/dist')),
+        clientBuildRootExists: require('fs').existsSync(path.join(process.cwd(), 'client/dist'))
+    });
+});
 
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../client', 'dist', 'index.html'));
-    });
-} else {
-    app.get('/', (req, res) => {
-        res.send('Online Voting System API (Development Mode)');
-    });
-}
+// Serve Static Files in Production
+const distPath = path.resolve(__dirname, '..', 'client', 'dist');
+console.log('Static files being served from:', distPath);
+
+app.use(express.static(distPath));
+
+// Wildcard route for React Router
+app.get('*', (req, res) => {
+    const indexPath = path.join(distPath, 'index.html');
+    if (require('fs').existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('Static files not found. Build may have failed or path is incorrect.');
+    }
+});
 
 // Socket.io Connection
 io.on('connection', (socket) => {
