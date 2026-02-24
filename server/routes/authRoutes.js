@@ -9,7 +9,8 @@ const {
     verifyOTP,
     resendOTP,
     getUsers,
-    deleteUser
+    deleteUser,
+    deleteMe
 } = require('../controllers/authController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -18,6 +19,7 @@ router.post('/login', loginUser);
 router.post('/verify-otp', verifyOTP);
 router.post('/resend-otp', resendOTP);
 router.get('/me', protect, getMe);
+router.delete('/me', protect, deleteMe);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:resettoken', resetPassword);
 

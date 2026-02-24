@@ -359,6 +359,37 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const deleteMe = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide email and password to confirm deletion' });
+        }
+
+        const user = await User.findById(req.user._id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.email !== email.trim().toLowerCase()) {
+            return res.status(401).json({ message: 'Incorrect email address' });
+        }
+
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Incorrect password' });
+        }
+
+        await user.deleteOne();
+        res.status(200).json({ success: true, message: 'Your account has been deleted permanently' });
+    } catch (error) {
+        console.error('DeleteMe Error:', error);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -369,4 +400,5 @@ module.exports = {
     resendOTP,
     getUsers,
     deleteUser,
+    deleteMe,
 };

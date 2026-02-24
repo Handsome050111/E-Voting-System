@@ -4,11 +4,18 @@ import Navbar from '../components/Navbar';
 import AuthContext from '../context/AuthContext';
 
 const VoterDashboard = () => {
-    const { user } = useContext(AuthContext);
+    const { user, logout } = useContext(AuthContext);
     const [elections, setElections] = useState([]);
     const [votedElections, setVotedElections] = useState({}); // Stores { electionId: candidateName }
     const [candidates, setCandidates] = useState({});
     const [selectedElection, setSelectedElection] = useState(null);
+
+    // Account Deletion State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteEmail, setDeleteEmail] = useState('');
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchElections = async () => {
         try {
@@ -63,6 +70,28 @@ const VoterDashboard = () => {
             } catch (error) {
                 alert(error.response?.data?.message || 'Error casting vote');
             }
+        }
+    };
+
+    const handleDeleteAccount = async (e) => {
+        e.preventDefault();
+        setDeleteError('');
+        setIsDeleting(true);
+
+        try {
+            const config = {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                data: { email: deleteEmail, password: deletePassword }
+            };
+            const res = await api.delete('/auth/me', config);
+
+            alert(res.data.message || 'Account successfully deleted.');
+            setShowDeleteModal(false);
+            logout();
+        } catch (error) {
+            setDeleteError(error.response?.data?.message || 'Error deleting account');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -170,6 +199,92 @@ const VoterDashboard = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Danger Zone */}
+                <div className="mt-16 pt-8 border-t border-slate-200 max-w-2xl mx-auto text-center flex flex-col items-center">
+                    <div className="bg-red-50 p-6 rounded-2xl border border-red-100 w-full">
+                        <h3 className="text-xl font-bold text-red-600 mb-2">Danger Zone</h3>
+                        <p className="text-slate-600 mb-6 text-sm">Permanently delete your account and all associated personal data from VoteSecure.</p>
+                        <button
+                            onClick={() => setShowDeleteModal(true)}
+                            className="bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm"
+                        >
+                            Delete My Account
+                        </button>
+                    </div>
+                </div>
+
+                {/* Delete Modal */}
+                {showDeleteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-slate-100">
+                            <div className="p-6 bg-red-50 border-b border-red-100 flex items-center gap-3 text-red-700">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                <h3 className="text-xl font-bold">Delete Account</h3>
+                            </div>
+
+                            <form onSubmit={handleDeleteAccount} className="p-6">
+                                <p className="text-slate-600 text-sm mb-6">
+                                    This action is <strong className="text-red-600">permanent</strong> and cannot be undone. Please confirm your identity to proceed.
+                                </p>
+
+                                {deleteError && (
+                                    <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm mb-4 font-medium border border-red-200">
+                                        {deleteError}
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+                                            value={deleteEmail}
+                                            onChange={(e) => setDeleteEmail(e.target.value)}
+                                            placeholder="Verify your email"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+                                            value={deletePassword}
+                                            onChange={(e) => setDeletePassword(e.target.value)}
+                                            placeholder="Enter your password"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowDeleteModal(false);
+                                            setDeleteError('');
+                                            setDeleteEmail('');
+                                            setDeletePassword('');
+                                        }}
+                                        className="flex-1 py-2 px-4 border border-slate-300 rounded-lg text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isDeleting}
+                                        className="flex-1 py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isDeleting ? 'Deleting...' : 'Delete Account'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
             </div>
