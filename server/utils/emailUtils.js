@@ -1,58 +1,46 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // For development, we can use ethereal or a simple log if credentials aren't provided
-    // But since nodemailer is in dependencies, let's set up a basic transport
+    // Due to Render blocking outbound SMTP, we use Resend's HTTP API.
+    // Resend is extremely developer friendly and rarely silently drops emails like Brevo.
 
-    // Due to Render.com blocking all outbound SMTP ports (25, 465, 587) on their free tier,
-    // we must use an HTTP API to send emails instead of Nodemailer/SMTP.
-    // We are using Brevo (formerly Sendinblue) because it has a generous free tier and a simple HTTP API.
-
-    const apiKey = process.env.BREVO_API_KEY;
+    const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
-        throw new Error('Missing BREVO_API_KEY environment variable. Render blocks standard SMTP, so you must use Brevo. Please add BREVO_API_KEY to your Render environment variables.');
+        throw new Error('Missing RESEND_API_KEY. Render blocks standard SMTP, so you must use Resend HTTP API. Please add RESEND_API_KEY to your Render environment variables.');
     }
 
     const payload = {
-        sender: {
-            name: process.env.FROM_NAME || 'VoteSecure Admin',
-            email: process.env.FROM_EMAIL || 'no-reply@votesecure.com'
-        },
-        to: [
-            {
-                email: options.email
-            }
-        ],
+        from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+        to: [options.email],
         subject: options.subject,
-        textContent: options.message
+        html: `<p>${options.message}</p>`
     };
 
-    console.log(`Attempting to send HTTP email to: ${options.email} via Brevo API...`);
+    console.log(`Attempting to send email to: ${options.email} via Resend API...`);
 
     try {
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
-                'accept': 'application/json',
-                'api-key': apiKey,
-                'content-type': 'application/json'
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Brevo API Error: ${response.status} - ${JSON.stringify(errorData)}`);
+            const errorText = await response.text();
+            throw new Error(`Resend API Error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('✅ HTTP Email sent successfully via Brevo: %s', data.messageId);
-        global.lastEmailError = null; // Clear on success
+        console.log('✅ Email sent successfully via Resend:', data.id);
+        global.lastEmailError = null;
         return data;
 
     } catch (error) {
-        console.error('❌ HTTP Email Error:', error.message);
+        console.error('❌ Resend Email Error:', error.message);
         global.lastEmailError = error.message;
         throw error;
     }
