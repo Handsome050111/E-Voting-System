@@ -65,7 +65,7 @@ const Register = () => {
                                     placeholder="John Doe"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    pattern="^[a-zA-Z\s]+$"
+                                    pattern="^[a-zA-Z ]+$"
                                     title="Name must contain only letters and spaces."
                                     maxLength="50"
                                 />
