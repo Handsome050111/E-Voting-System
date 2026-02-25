@@ -48,26 +48,15 @@ const registerUser = async (req, res) => {
             await userExists.save();
 
             const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
-            try {
-                await sendEmail({
-                    email: userExists.email,
-                    subject: 'Email Verification - VoteSecure',
-                    message,
-                });
-                return res.status(200).json({
-                    success: true,
-                    message: 'New OTP sent to email. Please verify.',
-                    email: userExists.email,
-                });
-            } catch (err) {
-                console.error('Email error:', err);
-                return res.status(200).json({
-                    success: true,
-                    message: 'Registration updated, but OTP email failed. Check console.',
-                    email: userExists.email,
-                    debugOtp: otp,
-                });
-            }
+
+            // Bypass email sending for fast testing
+            console.log(message);
+            return res.status(200).json({
+                success: true,
+                message: 'New OTP generated for testing. Please verify.',
+                email: userExists.email,
+                debugOtp: otp,
+            });
 
         }
 
@@ -89,27 +78,15 @@ const registerUser = async (req, res) => {
         if (user) {
             // Send OTP Email
             const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
-            try {
-                await sendEmail({
-                    email: user.email,
-                    subject: 'Email Verification - VoteSecure',
-                    message,
-                });
 
-                res.status(201).json({
-                    success: true,
-                    message: 'OTP sent to email. Please verify.',
-                    email: user.email,
-                });
-            } catch (err) {
-                console.error('Email error:', err);
-                res.status(201).json({
-                    success: true,
-                    message: 'User registered, but OTP email failed. Please contact admin.',
-                    email: user.email,
-                    debugOtp: otp, // Temporarily include for dev if email fails
-                });
-            }
+            // Bypass email sending for fast testing
+            console.log(message);
+            res.status(201).json({
+                success: true,
+                message: 'OTP generated for testing. Please verify.',
+                email: user.email,
+                debugOtp: otp, // Pre-fill for dev testing
+            });
 
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -318,13 +295,14 @@ const resendOTP = async (req, res) => {
         await user.save();
 
         const message = `Your new verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
-        try {
-            await sendEmail({ email: user.email, subject: 'New Email Verification Code', message });
-            res.status(200).json({ success: true, message: 'New OTP sent to email.' });
-        } catch (err) {
-            console.error('Email error:', err);
-            res.status(200).json({ success: true, message: 'OTP regenerated, but email failed. Check console.', debugOtp: otp });
-        }
+
+        // Bypass email sending for fast testing
+        console.log(message);
+        res.status(200).json({
+            success: true,
+            message: 'New OTP generated for testing.',
+            debugOtp: otp
+        });
 
     } catch (error) {
         console.error('ResendOTP Error:', error);
