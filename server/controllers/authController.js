@@ -39,7 +39,7 @@ const registerUser = async (req, res) => {
             // User exists but is unverified - allow updating and re-sending OTP
             console.log(`Unverified user found: ${trimmedEmail}. Updating and re-sending OTP.`);
             const otp = Math.floor(1000 + Math.random() * 9000).toString();
-            const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+            const otpExpire = new Date(Date.now() + 1 * 60 * 1000);
 
             userExists.name = name;
             userExists.password = password; // Pre-save hook will hash this
@@ -47,7 +47,7 @@ const registerUser = async (req, res) => {
             userExists.otpExpire = otpExpire;
             await userExists.save();
 
-            const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 10 minutes.`;
+            const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
             try {
                 await sendEmail({
                     email: userExists.email,
@@ -73,7 +73,7 @@ const registerUser = async (req, res) => {
 
         // Generate 4-digit OTP
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
-        const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const otpExpire = new Date(Date.now() + 1 * 60 * 1000); // 1 minute
 
         // Create user
         const user = await User.create({
@@ -88,7 +88,7 @@ const registerUser = async (req, res) => {
 
         if (user) {
             // Send OTP Email
-            const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 10 minutes.`;
+            const message = `Your verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
             try {
                 await sendEmail({
                     email: user.email,
@@ -314,10 +314,10 @@ const resendOTP = async (req, res) => {
 
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
         user.otp = otp;
-        user.otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+        user.otpExpire = new Date(Date.now() + 1 * 60 * 1000);
         await user.save();
 
-        const message = `Your new verification code for VoteSecure is: ${otp}. This code will expire in 10 minutes.`;
+        const message = `Your new verification code for VoteSecure is: ${otp}. This code will expire in 1 minute.`;
         try {
             await sendEmail({ email: user.email, subject: 'New Email Verification Code', message });
             res.status(200).json({ success: true, message: 'New OTP sent to email.' });
