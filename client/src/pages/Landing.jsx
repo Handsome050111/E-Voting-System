@@ -210,7 +210,10 @@ const Landing = () => {
                         </div>
                     </div>
                     <div className="pt-8 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        <p>© 2026 VoteSecure Platform. All rights reserved.</p>
+                        <div className="flex flex-col gap-1">
+                            <p>© 2026 VoteSecure Platform. All rights reserved.</p>
+                            <p className="text-indigo-400">Developed by Khaista Rehman & Bushra Gul</p>
+                        </div>
                         <div className="flex gap-8">
                             <a href="#" className="hover:text-indigo-600 transition-colors">Terms</a>
                             <a href="#" className="hover:text-indigo-600 transition-colors">Privacy</a>
